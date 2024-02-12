@@ -2,6 +2,7 @@ package deck
 
 import (
 	"fmt"
+	"math/rand"
 	"strconv"
 )
 
@@ -9,7 +10,7 @@ type Suit int
 
 func (s Suit) String() string {
 	switch s {
-	case Spades: 
+	case Spades:
 		return "SPADES"
 
 	case Harts:
@@ -17,10 +18,10 @@ func (s Suit) String() string {
 
 	case Diamonds:
 		return "DIAMONDS"
-	
+
 	case Clubs:
 		return "CLUBS"
-	
+
 	default:
 		panic("Invalid card suit")
 
@@ -35,7 +36,7 @@ const (
 )
 
 type Card struct {
-	suit Suit
+	suit  Suit
 	value int
 }
 
@@ -55,7 +56,7 @@ func NewCard(s Suit, v int) Card {
 	}
 
 	return Card{
-		suit: s,
+		suit:  s,
 		value: v,
 	}
 }
@@ -67,9 +68,9 @@ func New() Deck {
 	var (
 		nSuits = 4
 		nCards = 13
-		d = [52] Card{}
+		d      = [52]Card{}
 	)
-	
+
 	x := 0
 	for i := 0; i < nSuits; i++ {
 
@@ -80,25 +81,40 @@ func New() Deck {
 
 	}
 
+	return shuffle(d)
+}
+
+func shuffle(d Deck) Deck {
+
+	for i := 0; i < len(d); i++ {
+
+		r := rand.Intn(i + 1)
+
+		if r != i {
+			d[i], d[r] = d[r], d[i]
+		}
+
+	}
+
 	return d
 }
 
 func suitToUnicode(s Suit) string {
 	switch s {
-		case Spades: 
-			return "♠"
-	
-		case Harts:
-			return "♥"
-	
-		case Diamonds:
-			return "♦"
-		
-		case Clubs:
-			return "♣"
-		
-		default:
-			panic("Invalid card suit")
-	
+	case Spades:
+		return "♠"
+
+	case Harts:
+		return "♥"
+
+	case Diamonds:
+		return "♦"
+
+	case Clubs:
+		return "♣"
+
+	default:
+		panic("Invalid card suit")
+
 	}
 }
