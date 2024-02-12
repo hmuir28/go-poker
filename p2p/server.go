@@ -38,7 +38,7 @@ func (s *Server) Start() {
 		panic(err)
 	}
 
-	fmt.Printf("game server running on port %s", s.ListenAddr)
+	fmt.Printf("game server running on port %s\n", s.ListenAddr)
 
 	s.acceptLoop()
 }
@@ -67,6 +67,12 @@ func (s *Server) acceptLoop() {
 			panic(err)
 		}
 
+		peer := &Peer{
+			conn: conn,
+		}
+
+		s.addPeer <- peer
+
 		go s.handleConn(conn)
 	}
 }
@@ -93,7 +99,7 @@ func (s *Server) loop() {
 
 		case peer := <-s.addPeer:
 			s.peers[peer.conn.RemoteAddr()] = peer
-			fmt.Printf("new player connected %s", peer.conn.RemoteAddr())
+			fmt.Printf("new player connected %s\n", peer.conn.RemoteAddr())
 		}
 	}
 }
