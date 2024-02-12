@@ -1,19 +1,23 @@
 package main
 
 import (
-	"fmt"
-	"math/rand"
-	"time"
-
-	"github.com/hmuir28/go-poker/deck"
+	"github.com/hmuir28/go-poker/p2p"
 )
 
 func main() {
-	rand.Seed(time.Now().UnixNano())
+	// rand.Seed(time.Now().UnixNano())
 
-	for i := 0; i < 10; i++ {
-		d := deck.New()
-		fmt.Println(d)
-		fmt.Println()
+	// for i := 0; i < 10; i++ {
+	// 	d := deck.New()
+	// 	fmt.Println(d)
+	// 	fmt.Println()
+	// }
+
+	config := p2p.ServerConfig{
+		ListenAddr: ":3000",
 	}
+	server := p2p.NewServer(config)
+
+	server.Start()
+
 }
