@@ -1,17 +1,16 @@
 package main
 
 import (
-	"log"
 	"time"
 
 	"github.com/hmuir28/go-poker/p2p"
 )
 
-func main() {
+func makeServer(addr string) *p2p.Server {
 	config := p2p.ServerConfig{
 		Version:     "GO POKER v0.1-alpha",
 		ListenAddr:  ":3000",
-		GameVariant: p2p.Other,
+		GameVariant: p2p.TEXAS_HOLDEM,
 	}
 	server := p2p.NewServer(config)
 
@@ -19,16 +18,22 @@ func main() {
 
 	time.Sleep(1 * time.Second)
 
-	remoteConfig := p2p.ServerConfig{
-		Version:     "GO POKER v0.1-alpha",
-		ListenAddr:  ":4000",
-		GameVariant: p2p.TEXAS_HOLDEM,
-	}
-	remoteServer := p2p.NewServer(remoteConfig)
-	go remoteServer.Start()
-	if err := remoteServer.Connect(":3000"); err != nil {
-		log.Fatal(err)
-	}
+	return server
+}
+
+func main() {
+	playerA := makeServer(":3000")
+	playerB := makeServer(":4000")
+	playerC := makeServer(":5000")
+
+	playerC.Connect(playerA.ListenAddr)
+
+	time.Sleep(2 * time.Millisecond)
+
+	playerB.Connect(playerC.ListenAddr)
+
+	_ = playerA
+	_ = playerB
 
 	select {}
 }
