@@ -11,7 +11,7 @@ func main() {
 	config := p2p.ServerConfig{
 		Version:     "GO POKER v0.1-alpha",
 		ListenAddr:  ":3000",
-		GameVariant: p2p.TEXAS_HOLDEM,
+		GameVariant: p2p.Other,
 	}
 	server := p2p.NewServer(config)
 

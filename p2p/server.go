@@ -42,6 +42,8 @@ type Server struct {
 	addPeer    chan *Peer
 	deletePeer chan *Peer
 	msgChan    chan *Message
+
+	gameState *GameState
 }
 
 func NewServer(config ServerConfig) *Server {
@@ -50,6 +52,7 @@ func NewServer(config ServerConfig) *Server {
 		peers:        make(map[net.Addr]*Peer),
 		addPeer:      make(chan *Peer),
 		msgChan:      make(chan *Message),
+		gameState:    NewGameState(),
 	}
 
 	tr := NewTCPTransport(s.ListenAddr)
@@ -96,12 +99,13 @@ func (s *Server) Connect(addr string) error {
 	}
 
 	peer := &Peer{
-		conn: conn,
+		conn:     conn,
+		outbound: true,
 	}
 
 	s.addPeer <- peer
 
-	return peer.Send([]byte(s.Version))
+	return s.SendHandshake(peer)
 }
 
 func (s *Server) listen() error {
@@ -132,14 +136,24 @@ func (s *Server) loop() {
 			delete(s.peers, peer.conn.RemoteAddr())
 
 		case peer := <-s.addPeer:
-			s.SendHandshake(peer)
-
 			if err := s.handshake(peer); err != nil {
 				logrus.Errorf("handshake with incoming player failed: %s", err)
+				peer.conn.Close()
+
+				delete(s.peers, peer.conn.RemoteAddr())
 				continue
 			}
 
 			go peer.readLoop(s.msgChan)
+
+			if !peer.outbound {
+				if err := s.SendHandshake(peer); err != nil {
+					logrus.Errorf("failed to send handshake with peer: %s", err)
+					peer.conn.Close()
+					delete(s.peers, peer.conn.RemoteAddr())
+					continue
+				}
+			}
 
 			logrus.WithFields(logrus.Fields{
 				"addr": peer.conn.RemoteAddr(),
@@ -163,16 +177,12 @@ type Handshake struct {
 func (s *Server) handshake(p *Peer) error {
 	hs := &Handshake{}
 
-	fmt.Println(p)
-	fmt.Println(p.conn)
-	fmt.Println("----------")
-
 	if err := gob.NewDecoder(p.conn).Decode(hs); err != nil {
 		return err
 	}
 
 	if s.GameVariant != hs.GameVariant {
-		return fmt.Errorf("invalid game variant %s\n", hs.GameVariant)
+		return fmt.Errorf("game variant does not match %s\n", hs.GameVariant)
 	}
 
 	if s.Version != hs.Version {
@@ -191,4 +201,8 @@ func (s *Server) handshake(p *Peer) error {
 func (s *Server) handleMessage(msg *Message) error {
 	fmt.Printf("%+v \n", msg)
 	return nil
+}
+
+func Init() {
+	gob.Register(Handshake{})
 }

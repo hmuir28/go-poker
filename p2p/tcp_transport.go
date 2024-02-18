@@ -2,7 +2,6 @@ package p2p
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"net"
 
@@ -10,7 +9,8 @@ import (
 )
 
 type Peer struct {
-	conn net.Conn
+	conn     net.Conn
+	outbound bool
 }
 
 type Message struct {
@@ -74,11 +74,10 @@ func (t *TCPTransport) ListenAndAccept() error {
 		}
 
 		peer := &Peer{
-			conn: conn,
+			conn:     conn,
+			outbound: false,
 		}
 
 		t.AddPeer <- peer
 	}
-
-	return fmt.Errorf("TCP transport stopped reason: ")
 }
